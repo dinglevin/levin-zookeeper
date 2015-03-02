@@ -10,6 +10,7 @@
   <modules>
     <module>levin-zookeeper-maven</module>
     <module>levin-zookeeper-clients</module>
+    <module>levin-zookeeper-servers</module>
   </modules>
   
   <properties>
