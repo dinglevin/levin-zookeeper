@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>levin.zookeeper</groupId>
+    <artifactId>levin-zookeeper</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>levin-zookeeper-clients</artifactId>
+  <name>Levin ZooKeeper Clients</name>
+  <description>Levin ZooKeeper Clients Projects</description>
+  
+  <properties>
+    <levin.zookeeper.version>0.0.1-SNAPSHOT</levin.zookeeper.version>
+  </properties>
+  
+  <dependencies>
+    <dependency>
+        <groupId>levin.zookeeper</groupId>
+        <artifactId>levin-zookeeper-maven</artifactId>
+        <version>${levin.zookeeper.version}</version>
+    </dependency>
+  </dependencies>
+</project>
