@@ -11,6 +11,7 @@
     <module>levin-zookeeper-maven</module>
     <module>levin-zookeeper-clients</module>
     <module>levin-zookeeper-servers</module>
+    <module>levin-zookeeper-versionrepo</module>
   </modules>
   
   <properties>
