@@ -19,18 +19,19 @@ public class ZooKeeperVersionRepoTest {
     
     @BeforeClass
     public static void setup() throws Exception {
-        testServerRunner = new ZooKeeperServerTestRunner();
-        CountDownLatch startupLatch = testServerRunner.startDaemon();
+        //testServerRunner = new ZooKeeperServerTestRunner();
+        //testServerRunner.start();
+        //CountDownLatch startupLatch = testServerRunner.startDaemon();
         
-        startupLatch.await(5, TimeUnit.MINUTES);
-        logger.info("ZooKeeper embeded server successfully startup");
+        //startupLatch.await(5, TimeUnit.MINUTES);
+        //logger.info("ZooKeeper embeded server successfully startup");
         
-        versionRepo = new ZooKeeperVersionRepo("localhost:2811");
+        versionRepo = new ZooKeeperVersionRepo("127.0.0.1:2811");
     }
     
     @AfterClass
     public static void tearDown() throws Exception {
-        testServerRunner.stop();
+        //testServerRunner.stop();
     }
     
     @Test
@@ -38,5 +39,15 @@ public class ZooKeeperVersionRepoTest {
         ObjectName name = new ObjectName("not", "exist", "name");
         int version = versionRepo.getVersion(name);
         assertEquals(-1, version);
+    }
+    
+    @Test
+    public void testIncrementNonExistObjectNameVersion() {
+        ObjectName name = new ObjectName("init", "not-exist", Long.toString(System.currentTimeMillis()));
+        int version1 = versionRepo.incrementVersion(name);
+        int version2 = versionRepo.incrementVersion(name);
+        
+        assertEquals(1, version1);
+        assertEquals(2, version2);
     }
 }

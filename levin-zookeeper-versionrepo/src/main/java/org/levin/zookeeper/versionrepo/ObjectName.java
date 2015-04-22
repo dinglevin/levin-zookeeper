@@ -61,8 +61,8 @@ public class ObjectName implements Serializable {
         checkNotNull(name, "name is null");
         
         name = name.trim();
-        checkArgument(name.isEmpty(), "name is empty");
-        checkArgument(name.contains(SEPARATOR), "name contains " + SEPARATOR);
+        checkArgument(!name.isEmpty(), "name is empty");
+        checkArgument(!name.contains(SEPARATOR), "name contains " + SEPARATOR);
     }
     
     public String toPath() {
