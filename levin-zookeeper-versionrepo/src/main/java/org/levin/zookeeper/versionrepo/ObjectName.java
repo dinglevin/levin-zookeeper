@@ -7,17 +7,19 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 public class ObjectName implements Serializable {
     private static final long serialVersionUID = 1L;
-    private static final Node[] EMPTY_NODES = new Node[0];
+    private static final Node[] ROOT_NODES = new Node[0];
+    
+    public static final String SEPARATOR = "/";
     
     private final Node[] nodes;
     
     public ObjectName() { 
-        nodes = EMPTY_NODES;
+        nodes = ROOT_NODES;
     }
     
     public ObjectName(String... nodes) {
         if (nodes.length == 0) {
-            this.nodes = EMPTY_NODES;
+            this.nodes = ROOT_NODES;
         } else {
             this.nodes = new Node[nodes.length];
             for (int i = 0; i < nodes.length; i++) {
@@ -32,7 +34,7 @@ public class ObjectName implements Serializable {
     }
     
     public ObjectName appendNode(String node) {
-        if (nodes.length == 0) {
+        if (nodes == ROOT_NODES) {
             return new ObjectName(node);
         }
         
@@ -44,7 +46,7 @@ public class ObjectName implements Serializable {
     }
     
     public ObjectName prependNode(String node) {
-        if (nodes.length == 0) {
+        if (nodes == ROOT_NODES) {
             return new ObjectName(node);
         }
         
@@ -60,7 +62,34 @@ public class ObjectName implements Serializable {
         
         name = name.trim();
         checkArgument(name.isEmpty(), "name is empty");
-        checkArgument(name.contains("/"), "name contains '/'");
+        checkArgument(name.contains(SEPARATOR), "name contains " + SEPARATOR);
+    }
+    
+    public String toPath() {
+        if (nodes == ROOT_NODES) {
+            return SEPARATOR;
+        }
+        
+        StringBuilder builder = new StringBuilder();
+        for (Node node : nodes) {
+            builder.append(SEPARATOR).append(node.name);
+        }
+        return builder.toString();
+    }
+    
+    public String[] toPaths() {
+        if (nodes == ROOT_NODES) {
+            throw new IllegalStateException("No paths for root node");
+        }
+        
+        String[] results = new String[nodes.length];
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < nodes.length; i++) {
+            builder.append(SEPARATOR).append(nodes[i].name);
+            results[i] = builder.toString();
+        }
+        
+        return results;
     }
     
     private static class Node {

@@ -18,6 +18,6 @@
     <root>
         <level value ="info"/>
         <appender-ref ref="console"/>
-        <appender-ref ref="dailyFile"/>
+        <!-- <appender-ref ref="dailyFile"/> -->
     </root>
 </log4j:configuration>
