@@ -1,76 +1,90 @@
 package org.levin.zookeeper.versionrepo;
 
-import java.io.IOException;
-
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.Stat;
+import org.levin.zookeeper.RecoverableZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 public class ZooKeeperVersionRepo implements VersionRepo, Watcher {
     private static final Logger logger = LoggerFactory.getLogger(ZooKeeperVersionRepo.class);
     
     private static final int DEFAULT_SESSION_TIMEOUT = 60000; // 60s
+    private static final int DEFAULT_MAX_RETRY_COUNT = 10;
+    private static final int DEFAULT_RETRY_INTERVAL_MS = 100; // 100ms
     
-    private final ZooKeeper zookeeper;
+    private final RecoverableZooKeeper zookeeper;
     
-    public ZooKeeperVersionRepo(String quorumServers) throws IOException {
-        this(quorumServers, DEFAULT_SESSION_TIMEOUT);
+    public ZooKeeperVersionRepo(String quorumServers) throws KeeperException {
+        this(quorumServers, DEFAULT_SESSION_TIMEOUT, DEFAULT_MAX_RETRY_COUNT, DEFAULT_RETRY_INTERVAL_MS);
     }
     
-    public ZooKeeperVersionRepo(String quorumServers, int sessionTimeout) throws IOException {
-        zookeeper = new ZooKeeper(quorumServers, sessionTimeout, this);
-    }
-    
-    @Override
-    public int getVersion(ObjectName name) {
-        Stat stat = new Stat();
-        try {
-            zookeeper.getData(name.toPath(), false, stat);
-        } catch (KeeperException e) {
-            if (e instanceof KeeperException.NoNodeException) {
-                return -1;
-            }
-            
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        
-        return stat.getVersion();
+    public ZooKeeperVersionRepo(String quorumServers, int sessionTimeout, 
+            int maxRetries, int retryIntervalMillis) throws KeeperException {
+        zookeeper = new RecoverableZooKeeper(quorumServers, sessionTimeout, this,
+                maxRetries, retryIntervalMillis);
     }
     
     @Override
-    public int incrementVersion(ObjectName name) {
-        int curVersion = getVersion(name);
+    public Version getVersion(ObjectName name) {
+        return getVersion(name, null);
+    }
+    
+    @Override
+    public Version incrementVersion(ObjectName name, long sequence) {
         String path = name.toPath();
         while (true) {
-            byte[] data = getTimestampBytes();
             try {
-                Stat stat = zookeeper.setData(path, data, curVersion);
-                return stat.getVersion();
+                Stat stat = new Stat();
+                byte[] versionData = zookeeper.getData(name.toPath(), false, stat);
+                Version curVersion = VersionProtoUtils.toVersion(versionData);
+                Version nextVersion = curVersion.nextVersion(sequence);
+                zookeeper.setData(path, VersionProtoUtils.toData(nextVersion), stat.getVersion());
+                return nextVersion;
             } catch (KeeperException e) {
                 if (e instanceof KeeperException.NoNodeException) {
-                    recursiveCreate(name);
+                    recursiveCreate(name, sequence);
                 } else {
                     throw new RuntimeException(e);
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
+            } catch (InvalidProtocolBufferException e) {
+                throw new RuntimeException(e);
             }
         }
     }
     
-    public void recursiveCreate(ObjectName name) {
+    private Version getVersion(ObjectName name, Stat stat) {
+        try {
+            byte[] versionData = zookeeper.getData(name.toPath(), false, stat);
+            return VersionProtoUtils.toVersion(versionData);
+        } catch (KeeperException e) {
+            if (e instanceof KeeperException.NoNodeException) {
+                return Version.NO_VERSION;
+            }
+            
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public void recursiveCreate(ObjectName name, long sequence) {
         String[] paths = name.toPaths();
         for (String path : paths) {
             try {
-                zookeeper.create(path, getTimestampBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                byte[] versionData = VersionProtoUtils.toData(new Version(1, sequence));
+                zookeeper.create(path, versionData, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             } catch (KeeperException e) {
                 if (e instanceof KeeperException.NodeExistsException) {
                     logger.debug("path already exists: " + path);
@@ -82,13 +96,44 @@ public class ZooKeeperVersionRepo implements VersionRepo, Watcher {
             }
         }
     }
-    
-    private static byte[] getTimestampBytes() {
-        return Long.toString(System.currentTimeMillis()).getBytes();
-    }
 
     @Override
     public void process(WatchedEvent event) {
-        logger.info("Received zookeer event: " + event);
+        logger.debug(prefix("Received ZooKeeper Event, type={}, state={}, path={}"),
+                event.getType(), event.getState(), event.getPath());
+
+        // Only handle Connection Event
+        if (event.getType() == EventType.None) {
+            connectionEvent(event);
+        }
+    }
+    
+    private void connectionEvent(WatchedEvent event) {
+        switch(event.getState()) {
+          case SyncConnected:
+            logger.info(prefix("Received SyncConnected connection event from zookeeper"));
+            break;
+
+          case Disconnected:
+            logger.warn(prefix("Received Disconnected connection event from zookeeper"));
+            break;
+
+          case Expired:
+            logger.warn(prefix("Received Expired connection event from zookeeper"));
+            break;
+
+          case ConnectedReadOnly:
+          case SaslAuthenticated:
+          case AuthFailed:
+            break;
+
+          default:
+            throw new IllegalStateException("Received event is not valid: " + event.getState());
+        }
+      }
+    
+    private String prefix(String msg) {
+        return "identifier: " + zookeeper.getIdentifier() + ", quorum: " + 
+                zookeeper.getQuorumServers() + " " + msg;
     }
 }

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 public class ZooKeeperServerTestRunner {
     private static final Logger logger = LoggerFactory.getLogger(ZooKeeperServerTestRunner.class);
     
-    private static final int DEFAULT_PORT = 62181;
+    private static final int DEFAULT_PORT = 2181;
     private static final String DEFAULT_DATA_DIR = "tmp/test_data";
     
     private ServerCnxnFactory cnxnFactory;
