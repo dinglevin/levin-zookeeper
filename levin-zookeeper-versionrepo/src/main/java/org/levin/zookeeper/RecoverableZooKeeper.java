@@ -29,7 +29,7 @@ import com.google.common.collect.Lists;
 public class RecoverableZooKeeper {
     private static final Logger logger = LoggerFactory.getLogger(RecoverableZooKeeper.class);
     
-    private static final byte[] MAGIC = Bytes.toBytes(0xABCD);
+    private static final byte[] MAGIC = Bytes.toBytes((short)0xABCD);
     private static final int MAGIC_SIZE = MAGIC.length;
     private static final int ID_LENGTH_SIZE = Bytes.SIZEOF_INT;
     private static final int ID_LENGTH_OFFSET = MAGIC_SIZE;
@@ -269,7 +269,7 @@ public class RecoverableZooKeeper {
         if (dataLen == 0) {
             return Bytes.EMPTY_BYTE_ARRAY;
         }
-        int dataOffset = MAGIC_SIZE + ID_LENGTH_OFFSET + idLen;
+        int dataOffset = MAGIC_SIZE + ID_LENGTH_SIZE + idLen;
         
         byte[] newData = new byte[dataLen];
         System.arraycopy(data, dataOffset, newData, 0, dataLen);
@@ -444,9 +444,9 @@ public class RecoverableZooKeeper {
     private void checkMagic(byte[] data) {
         byte magic1 = data[0];
         byte magic2 = data[1];
-        if (magic1 != 0xAB || magic2 != 0xCD) {
+        if (magic1 != (byte)0xAB || magic2 != (byte)0xCD) {
             throw new IllegalArgumentException("MAGIC value not match, actual:" +
-                    Bytes.toString(data, 0, MAGIC_SIZE) + ", expected: " + Bytes.toString(MAGIC));
+                    Bytes.toHex(new byte[] { magic1, magic2 }) + ", expected: " + Bytes.toHex(MAGIC));
         }
     }
 }

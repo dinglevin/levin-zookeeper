@@ -62,6 +62,17 @@ public class ZooKeeperVersionRepo implements VersionRepo, Watcher {
         }
     }
     
+    @Override
+    public void shutdown() {
+        if (zookeeper != null) {
+            try {
+                zookeeper.close();
+            } catch (InterruptedException e) {
+                logger.error("zookeeper client close interrupted", e);
+            }
+        }
+    }
+    
     private Version getVersion(ObjectName name, Stat stat) {
         try {
             byte[] versionData = zookeeper.getData(name.toPath(), false, stat);
@@ -83,7 +94,11 @@ public class ZooKeeperVersionRepo implements VersionRepo, Watcher {
         String[] paths = name.toPaths();
         for (String path : paths) {
             try {
-                byte[] versionData = VersionProtoUtils.toData(new Version(1, sequence));
+                Stat stat = zookeeper.exists(path, false);
+                if (stat != null) {
+                    continue;
+                }
+                byte[] versionData = VersionProtoUtils.toData(new Version(0, sequence));
                 zookeeper.create(path, versionData, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             } catch (KeeperException e) {
                 if (e instanceof KeeperException.NodeExistsException) {

@@ -33,21 +33,14 @@ public class ZooKeeperServerTestRunner {
     }
     
     public ZooKeeperServerTestRunner(int port, String dataDir) {
-        File dataPath = new File(dataDir);
-        if (dataPath.exists()) {
-            try {
-                FileUtils.deleteDirectory(dataPath);
-            } catch (IOException e) {
-                throw new RuntimeException("delete path fail: " + dataDir, e);
-            }
-        }
-        
-        if (!dataPath.mkdirs()) {
-            throw new IllegalStateException("Create data path fail: " + dataDir);
-        }
-        
         this.port = port;
         this.dataDir = dataDir;
+        
+        cleanupDataDir();
+        
+        if (!new File(dataDir).mkdirs()) {
+            throw new IllegalStateException("Create data path fail: " + dataDir);
+        }
     }
     
     public CountDownLatch startDaemon() {
@@ -85,6 +78,7 @@ public class ZooKeeperServerTestRunner {
         if (cnxnFactory != null) {
             cnxnFactory.shutdown();
         }
+        cleanupDataDir();
     }
     
     private void runFromConfig(ServerConfig config) throws IOException {
@@ -120,6 +114,17 @@ public class ZooKeeperServerTestRunner {
         } finally {
             if (txnLog != null) {
                 txnLog.close();
+            }
+        }
+    }
+    
+    private void cleanupDataDir() {
+        File dataPath = new File(dataDir);
+        if (dataPath.exists()) {
+            try {
+                FileUtils.deleteDirectory(dataPath);
+            } catch (IOException e) {
+                throw new RuntimeException("delete path fail: " + dataDir, e);
             }
         }
     }
