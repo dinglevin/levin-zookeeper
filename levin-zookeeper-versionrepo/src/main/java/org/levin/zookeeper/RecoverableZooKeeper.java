@@ -423,7 +423,7 @@ public class RecoverableZooKeeper {
     private synchronized ZooKeeper checkZK() throws KeeperException {
         if (zooKeeper == null) {
             try {
-                zooKeeper = new ZooKeeper(identifier, sessionTimeout, watcher);
+                zooKeeper = new ZooKeeper(quorumServers, sessionTimeout, watcher);
             } catch (IOException e) {
                 logger.warn("Unable to connect to ZooKeeper", e);
                 throw new KeeperException.OperationTimeoutException();
