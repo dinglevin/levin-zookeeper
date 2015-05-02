@@ -56,7 +56,7 @@ public class MBeanRegistry {
 
     public MBeanRegistry () {
         try {
-            mBeanServer = ManagementFactory.getPlatformMBeanServer();        
+            mBeanServer = ManagementFactory.getPlatformMBeanServer();
         } catch (Error e) {
             // Account for running within IKVM and create a new MBeanServer
             // if the PlatformMBeanServer does not exist.

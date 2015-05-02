@@ -8,6 +8,7 @@ import javax.management.JMException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.zookeeper.jmx.ManagedUtil;
+import org.apache.zookeeper.server.NettyServerCnxnFactory;
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ServerConfig;
 import org.apache.zookeeper.server.ZooKeeperServer;
@@ -41,6 +42,8 @@ public class ZooKeeperServerTestRunner {
         if (!new File(dataDir).mkdirs()) {
             throw new IllegalStateException("Create data path fail: " + dataDir);
         }
+        
+        //System.setProperty("zookeeper.serverCnxnFactory", NettyServerCnxnFactory.class.getName());
     }
     
     public CountDownLatch startDaemon() {

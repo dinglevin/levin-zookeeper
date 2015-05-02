@@ -180,13 +180,11 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
                 synchronized (this) {
                     selected = selector.selectedKeys();
                 }
-                ArrayList<SelectionKey> selectedList = new ArrayList<SelectionKey>(
-                        selected);
+                ArrayList<SelectionKey> selectedList = new ArrayList<SelectionKey>(selected);
                 Collections.shuffle(selectedList);
                 for (SelectionKey k : selectedList) {
                     if ((k.readyOps() & SelectionKey.OP_ACCEPT) != 0) {
-                        SocketChannel sc = ((ServerSocketChannel) k
-                                .channel()).accept();
+                        SocketChannel sc = ((ServerSocketChannel) k.channel()).accept();
                         InetAddress ia = sc.socket().getInetAddress();
                         int cnxncount = getClientCnxnCount(ia);
                         if (maxClientCnxns > 0 && cnxncount >= maxClientCnxns){
@@ -197,8 +195,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
                             LOG.info("Accepted socket connection from "
                                      + sc.socket().getRemoteSocketAddress());
                             sc.configureBlocking(false);
-                            SelectionKey sk = sc.register(selector,
-                                    SelectionKey.OP_READ);
+                            SelectionKey sk = sc.register(selector, SelectionKey.OP_READ);
                             NIOServerCnxn cnxn = createConnection(sc, sk);
                             sk.attach(cnxn);
                             addCnxn(cnxn);
@@ -208,8 +205,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory implements Runnable 
                         c.doIO(k);
                     } else {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Unexpected ops in select "
-                                      + k.readyOps());
+                            LOG.debug("Unexpected ops in select " + k.readyOps());
                         }
                     }
                 }

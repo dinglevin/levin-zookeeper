@@ -103,11 +103,9 @@ public class NIOServerCnxn extends ServerCnxn {
             outstandingLimit = zk.getGlobalOutstandingLimit();
         }
         sock.socket().setTcpNoDelay(true);
-        /* set socket linger to false, so that socket close does not
-         * block */
+        /* set socket linger to false, so that socket close does not block */
         sock.socket().setSoLinger(false, -1);
-        InetAddress addr = ((InetSocketAddress) sock.socket()
-                .getRemoteSocketAddress()).getAddress();
+        InetAddress addr = ((InetSocketAddress) sock.socket().getRemoteSocketAddress()).getAddress();
         authInfo.add(new Id("ip", addr.getHostAddress()));
         sk.interestOps(SelectionKey.OP_READ);
     }
@@ -277,8 +275,7 @@ public class NIOServerCnxn extends ServerCnxn {
                              * small to hold everything, nothing will be copied,
                              * so we've got to slice the buffer if it's too big.
                              */
-                            b = (ByteBuffer) b.slice().limit(
-                                    directBuffer.remaining());
+                            b = (ByteBuffer) b.slice().limit(directBuffer.remaining());
                         }
                         /*
                          * put() is going to modify the positions of both
@@ -378,7 +375,7 @@ public class NIOServerCnxn extends ServerCnxn {
             synchronized (this) {
                 outstandingRequests++;
             }
-            synchronized (this.factory) {        
+            synchronized (this.factory) {
                 // check throttling
                 if (zkServer.getInProcess() > outstandingLimit) {
                     if (LOG.isDebugEnabled()) {
@@ -392,7 +389,6 @@ public class NIOServerCnxn extends ServerCnxn {
                 }
             }
         }
-
     }
 
     public void disableRecv() {
@@ -520,7 +516,6 @@ public class NIOServerCnxn extends ServerCnxn {
         @Override
         public void commandRun() {
             pw.print("imok");
-            
         }
     }
     
@@ -666,8 +661,7 @@ public class NIOServerCnxn extends ServerCnxn {
                     // ie give up the cnxns lock faster
                     HashSet<NIOServerCnxn> cnxnset;
                     synchronized(factory.cnxns){
-                        cnxnset = (HashSet<NIOServerCnxn>)factory
-                        .cnxns.clone();
+                        cnxnset = (HashSet<NIOServerCnxn>) factory.cnxns.clone();
                     }
                     for(NIOServerCnxn c : cnxnset){
                         c.dumpConnectionInfo(pw, true);
@@ -847,68 +841,75 @@ public class NIOServerCnxn extends ServerCnxn {
 
         final PrintWriter pwriter = new PrintWriter(
                 new BufferedWriter(new SendBufferWriter()));
-        if (len == ruokCmd) {
-            RuokCommand ruok = new RuokCommand(pwriter);
-            ruok.start();
-            return true;
-        } else if (len == getTraceMaskCmd) {
-            TraceMaskCommand tmask = new TraceMaskCommand(pwriter);
-            tmask.start();
-            return true;
-        } else if (len == setTraceMaskCmd) {
-            int rc = sock.read(incomingBuffer);
-            if (rc < 0) {
-                throw new IOException("Read error");
-            }
+        try {
+            if (len == ruokCmd) {
+                RuokCommand ruok = new RuokCommand(pwriter);
+                ruok.start();
+                return true;
+            } else if (len == getTraceMaskCmd) {
+                TraceMaskCommand tmask = new TraceMaskCommand(pwriter);
+                tmask.start();
+                return true;
+            } else if (len == setTraceMaskCmd) {
+                int rc = sock.read(incomingBuffer);
+                if (rc < 0) {
+                    throw new IOException("Read error");
+                }
 
-            incomingBuffer.flip();
-            long traceMask = incomingBuffer.getLong();
-            ZooTrace.setTextTraceLevel(traceMask);
-            SetTraceMaskCommand setMask = new SetTraceMaskCommand(pwriter, traceMask);
-            setMask.start();
-            return true;
-        } else if (len == enviCmd) {
-            EnvCommand env = new EnvCommand(pwriter);
-            env.start();
-            return true;
-        } else if (len == confCmd) {
-            ConfCommand ccmd = new ConfCommand(pwriter);
-            ccmd.start();
-            return true;
-        } else if (len == srstCmd) {
-            StatResetCommand strst = new StatResetCommand(pwriter);
-            strst.start();
-            return true;
-        } else if (len == crstCmd) {
-            CnxnStatResetCommand crst = new CnxnStatResetCommand(pwriter);
-            crst.start();
-            return true;
-        } else if (len == dumpCmd) {
-            DumpCommand dump = new DumpCommand(pwriter);
-            dump.start();
-            return true;
-        } else if (len == statCmd || len == srvrCmd) {
-            StatCommand stat = new StatCommand(pwriter, len);
-            stat.start();
-            return true;
-        } else if (len == consCmd) {
-            ConsCommand cons = new ConsCommand(pwriter);
-            cons.start();
-            return true;
-        } else if (len == wchpCmd || len == wchcCmd || len == wchsCmd) {
-            WatchCommand wcmd = new WatchCommand(pwriter, len);
-            wcmd.start();
-            return true;
-        } else if (len == mntrCmd) {
-            MonitorCommand mntr = new MonitorCommand(pwriter);
-            mntr.start();
-            return true;
-        } else if (len == isroCmd) {
-            IsroCommand isro = new IsroCommand(pwriter);
-            isro.start();
-            return true;
+                incomingBuffer.flip();
+                long traceMask = incomingBuffer.getLong();
+                ZooTrace.setTextTraceLevel(traceMask);
+                SetTraceMaskCommand setMask = new SetTraceMaskCommand(pwriter, traceMask);
+                setMask.start();
+                return true;
+            } else if (len == enviCmd) {
+                EnvCommand env = new EnvCommand(pwriter);
+                env.start();
+                return true;
+            } else if (len == confCmd) {
+                ConfCommand ccmd = new ConfCommand(pwriter);
+                ccmd.start();
+                return true;
+            } else if (len == srstCmd) {
+                StatResetCommand strst = new StatResetCommand(pwriter);
+                strst.start();
+                return true;
+            } else if (len == crstCmd) {
+                CnxnStatResetCommand crst = new CnxnStatResetCommand(pwriter);
+                crst.start();
+                return true;
+            } else if (len == dumpCmd) {
+                DumpCommand dump = new DumpCommand(pwriter);
+                dump.start();
+                return true;
+            } else if (len == statCmd || len == srvrCmd) {
+                StatCommand stat = new StatCommand(pwriter, len);
+                stat.start();
+                return true;
+            } else if (len == consCmd) {
+                ConsCommand cons = new ConsCommand(pwriter);
+                cons.start();
+                return true;
+            } else if (len == wchpCmd || len == wchcCmd || len == wchsCmd) {
+                WatchCommand wcmd = new WatchCommand(pwriter, len);
+                wcmd.start();
+                return true;
+            } else if (len == mntrCmd) {
+                MonitorCommand mntr = new MonitorCommand(pwriter);
+                mntr.start();
+                return true;
+            } else if (len == isroCmd) {
+                IsroCommand isro = new IsroCommand(pwriter);
+                isro.start();
+                return true;
+            }
+            return false;
+        } finally {
+            if (pwriter != null) {
+                pwriter.close();
+            }
         }
-        return false;
+        
     }
 
     /** Reads the first 4 bytes of lenBuffer, which could be true length or
@@ -1084,7 +1085,7 @@ public class NIOServerCnxn extends ServerCnxn {
                     outstandingRequests--;
                 }
                 // check throttling
-                synchronized (this.factory) {        
+                synchronized (this.factory) {
                     if (zkServer.getInProcess() < outstandingLimit
                             || outstandingRequests < 1) {
                         sk.selector().wakeup();

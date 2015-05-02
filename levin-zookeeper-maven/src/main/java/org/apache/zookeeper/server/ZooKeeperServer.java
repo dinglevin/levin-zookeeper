@@ -400,7 +400,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
     }
     
-    public void startup() {        
+    public void startup() {
         if (sessionTracker == null) {
             createSessionTracker();
         }
@@ -604,7 +604,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
             baos.close();
             ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());
             bb.putInt(bb.remaining() - 4).rewind();
-            cnxn.sendBuffer(bb);    
+            cnxn.sendBuffer(bb);
 
             if (!valid) {
                 LOG.info("Invalid session 0x"
@@ -729,7 +729,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
     /**
      * return the outstanding requests
-     * in the queue, which havent been 
+     * in the queue, which haven't been 
      * processed yet
      */
     public long getOutstandingRequests() {
@@ -885,8 +885,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         RequestHeader h = new RequestHeader();
         h.deserialize(bia, "header");
         // Through the magic of byte buffers, txn will not be
-        // pointing
-        // to the start of the txn
+        // pointing to the start of the txn
         incomingBuffer = incomingBuffer.slice();
         if (h.getType() == OpCode.auth) {
             LOG.info("got auth packet " + cnxn.getRemoteSocketAddress());
@@ -900,7 +899,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                     authReturn = ap.handleAuthentication(cnxn, authPacket.getAuth());
                 } catch(RuntimeException e) {
                     LOG.warn("Caught runtime exception from AuthenticationProvider: " + scheme + " due to " + e);
-                    authReturn = KeeperException.Code.AUTHFAILED;                   
+                    authReturn = KeeperException.Code.AUTHFAILED;
                 }
             }
             if (authReturn!= KeeperException.Code.OK) {
@@ -920,8 +919,7 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
                 cnxn.disableRecv();
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Authentication succeeded for scheme: "
-                              + scheme);
+                    LOG.debug("Authentication succeeded for scheme: " + scheme);
                 }
                 LOG.info("auth success " + cnxn.getRemoteSocketAddress());
                 ReplyHeader rh = new ReplyHeader(h.getXid(), 0,
@@ -1007,6 +1005,4 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         }
         return rc;
     }
-
-
 }

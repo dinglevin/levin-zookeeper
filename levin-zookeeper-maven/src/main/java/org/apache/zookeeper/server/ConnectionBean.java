@@ -87,9 +87,8 @@ public class ConnectionBean implements ConnectionMXBean, ZKMBeanInfo {
     }
     
     public String[] getEphemeralNodes() {
-        if(zk.getZKDatabase()  !=null){
-            String[] res = zk.getZKDatabase().getEphemerals(sessionId)
-                .toArray(new String[0]);
+        if (zk.getZKDatabase()  !=null) {
+            String[] res = zk.getZKDatabase().getEphemerals(sessionId).toArray(new String[0]);
             Arrays.sort(res);
             return res;
         }
