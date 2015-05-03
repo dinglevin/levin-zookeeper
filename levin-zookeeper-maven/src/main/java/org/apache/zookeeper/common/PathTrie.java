@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  *      (bc)
  *   cf/
  *   (cf)
- */    
+ */
 public class PathTrie {
     /**
      * the logger for this class

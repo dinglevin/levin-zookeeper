@@ -49,13 +49,16 @@ import org.apache.zookeeper.server.util.SerializeUtils;
  * and provides access to the snapshots.
  */
 public class FileSnap implements SnapShot {
-    File snapDir;
-    private volatile boolean close = false;
-    private static final int VERSION=2;
-    private static final long dbId=-1;
     private static final Logger LOG = LoggerFactory.getLogger(FileSnap.class);
-    public final static int SNAP_MAGIC
-        = ByteBuffer.wrap("ZKSN".getBytes()).getInt();
+    
+    private volatile boolean close = false;
+    private static final int VERSION = 2;
+    private static final long dbId = -1;
+    
+    public final static int SNAP_MAGIC = ByteBuffer.wrap("ZKSN".getBytes()).getInt();
+    
+    File snapDir;
+    
     public FileSnap(File snapDir) {
         this.snapDir = snapDir;
     }
@@ -63,7 +66,7 @@ public class FileSnap implements SnapShot {
     /**
      * deserialize a data tree from the most recent snapshot
      * @return the zxid of the snapshot
-     */ 
+     */
     public long deserialize(DataTree dt, Map<Long, Integer> sessions)
             throws IOException {
         // we run through 100 snapshots (not all of them)
@@ -152,7 +155,7 @@ public class FileSnap implements SnapShot {
      * @throws IOException
      */
     private List<File> findNValidSnapshots(int n) throws IOException {
-        List<File> files = Util.sortDataDir(snapDir.listFiles(),"snapshot", false);
+        List<File> files = Util.sortDataDir(snapDir.listFiles(), "snapshot", false);
         int count = 0;
         List<File> list = new ArrayList<File>();
         for (File f : files) {
@@ -206,11 +209,10 @@ public class FileSnap implements SnapShot {
             OutputArchive oa, FileHeader header) throws IOException {
         // this is really a programmatic error and not something that can
         // happen at runtime
-        if(header==null)
-            throw new IllegalStateException(
-                    "Snapshot's not open for writing: uninitialized header");
+        if (header == null)
+            throw new IllegalStateException("Snapshot's not open for writing: uninitialized header");
         header.serialize(oa, "fileheader");
-        SerializeUtils.serializeSnapshot(dt,oa,sessions);
+        SerializeUtils.serializeSnapshot(dt, oa, sessions);
     }
 
     /**
@@ -246,5 +248,4 @@ public class FileSnap implements SnapShot {
     public synchronized void close() throws IOException {
         close = true;
     }
-
- }
+}

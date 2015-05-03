@@ -314,13 +314,11 @@ public class Util {
      * descending order
      * @return sorted input files
      */
-    public static List<File> sortDataDir(File[] files, String prefix, boolean ascending)
-    {
+    public static List<File> sortDataDir(File[] files, String prefix, boolean ascending) {
         if(files==null)
             return new ArrayList<File>(0);
         List<File> filelist = Arrays.asList(files);
         Collections.sort(filelist, new DataDirFileComparator(prefix, ascending));
         return filelist;
     }
-    
 }

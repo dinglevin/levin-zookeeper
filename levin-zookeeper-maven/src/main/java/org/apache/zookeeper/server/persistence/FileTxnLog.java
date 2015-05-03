@@ -122,8 +122,7 @@ public class FileTxnLog implements TxnLog {
     File logDir;
     private final boolean forceSync = !System.getProperty("zookeeper.forceSync", "yes").equals("no");;
     long dbId;
-    private LinkedList<FileOutputStream> streamsToFlush =
-        new LinkedList<FileOutputStream>();
+    private LinkedList<FileOutputStream> streamsToFlush = new LinkedList<FileOutputStream>();
     long currentSize;
     File logFileWrite = null;
 
@@ -152,7 +151,6 @@ public class FileTxnLog implements TxnLog {
     protected Checksum makeChecksumAlgorithm(){
         return new Adler32();
     }
-
 
     /**
      * rollover the current log file to a new one.
@@ -186,8 +184,7 @@ public class FileTxnLog implements TxnLog {
      * returns true iff something appended, otw false 
      */
     public synchronized boolean append(TxnHeader hdr, Record txn)
-        throws IOException
-    {
+        throws IOException {
         if (hdr != null) {
             if (hdr.getZxid() <= lastZxidSeen) {
                 LOG.warn("Current zxid " + hdr.getZxid()
@@ -203,7 +200,7 @@ public class FileTxnLog implements TxnLog {
                logFileWrite = new File(logDir, ("log." + 
                        Long.toHexString(hdr.getZxid())));
                fos = new FileOutputStream(logFileWrite);
-               logStream=new BufferedOutputStream(fos);
+               logStream = new BufferedOutputStream(fos);
                oa = BinaryOutputArchive.getArchive(logStream);
                FileHeader fhdr = new FileHeader(TXNLOG_MAGIC,VERSION, dbId);
                fhdr.serialize(oa, "fileheader");
@@ -215,8 +212,7 @@ public class FileTxnLog implements TxnLog {
             padFile(fos);
             byte[] buf = Util.marshallTxnEntry(hdr, txn);
             if (buf == null || buf.length == 0) {
-                throw new IOException("Faulty serialization for header " +
-                        "and txn");
+                throw new IOException("Faulty serialization for header and txn");
             }
             Checksum crc = makeChecksumAlgorithm();
             crc.update(buf, 0, buf.length);
@@ -261,7 +257,7 @@ public class FileTxnLog implements TxnLog {
                 logZxid = fzxid;
             }
         }
-        List<File> v=new ArrayList<File>(5);
+        List<File> v = new ArrayList<File>(5);
         for (File f : files) {
             long fzxid = Util.getZxidFromName(f.getName(), "log");
             if (fzxid < logZxid) {
@@ -452,7 +448,7 @@ public class FileTxnLog implements TxnLog {
             if (rc > 0) {
                 position += rc;
             }
-            return rc;            
+            return rc;
         }
         
         @Override
@@ -588,7 +584,7 @@ public class FileTxnLog implements TxnLog {
          * @throws IOException
          **/
         protected InputArchive createInputArchive(File logFile) throws IOException {
-            if(inputStream==null){
+            if(inputStream == null) {
                 inputStream= new PositionInputStream(new BufferedInputStream(new FileInputStream(logFile)));
                 LOG.debug("Created new input stream " + logFile);
                 ia  = BinaryInputArchive.getArchive(inputStream);

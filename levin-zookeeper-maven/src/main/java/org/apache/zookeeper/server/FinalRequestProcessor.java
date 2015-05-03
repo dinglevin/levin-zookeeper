@@ -257,22 +257,19 @@ public class FinalRequestProcessor implements RequestProcessor {
                 lastOp = "EXIS";
                 // TODO we need to figure out the security requirement for this!
                 ExistsRequest existsRequest = new ExistsRequest();
-                ByteBufferInputStream.byteBuffer2Record(request.request,
-                        existsRequest);
+                ByteBufferInputStream.byteBuffer2Record(request.request, existsRequest);
                 String path = existsRequest.getPath();
                 if (path.indexOf('\0') != -1) {
                     throw new KeeperException.BadArgumentsException();
                 }
-                Stat stat = zks.getZKDatabase().statNode(path, existsRequest
-                        .getWatch() ? cnxn : null);
+                Stat stat = zks.getZKDatabase().statNode(path, existsRequest.getWatch() ? cnxn : null);
                 rsp = new ExistsResponse(stat);
                 break;
             }
             case OpCode.getData: {
                 lastOp = "GETD";
                 GetDataRequest getDataRequest = new GetDataRequest();
-                ByteBufferInputStream.byteBuffer2Record(request.request,
-                        getDataRequest);
+                ByteBufferInputStream.byteBuffer2Record(request.request, getDataRequest);
                 DataNode n = zks.getZKDatabase().getNode(getDataRequest.getPath());
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
@@ -282,8 +279,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                     aclL = n.acl;
                 }
                 PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclL),
-                        ZooDefs.Perms.READ,
-                        request.authInfo);
+                        ZooDefs.Perms.READ, request.authInfo);
                 Stat stat = new Stat();
                 byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
                         getDataRequest.getWatch() ? cnxn : null);
@@ -306,19 +302,16 @@ public class FinalRequestProcessor implements RequestProcessor {
             case OpCode.getACL: {
                 lastOp = "GETA";
                 GetACLRequest getACLRequest = new GetACLRequest();
-                ByteBufferInputStream.byteBuffer2Record(request.request,
-                        getACLRequest);
+                ByteBufferInputStream.byteBuffer2Record(request.request, getACLRequest);
                 Stat stat = new Stat();
-                List<ACL> acl = 
-                    zks.getZKDatabase().getACL(getACLRequest.getPath(), stat);
+                List<ACL> acl =  zks.getZKDatabase().getACL(getACLRequest.getPath(), stat);
                 rsp = new GetACLResponse(acl, stat);
                 break;
             }
             case OpCode.getChildren: {
                 lastOp = "GETC";
                 GetChildrenRequest getChildrenRequest = new GetChildrenRequest();
-                ByteBufferInputStream.byteBuffer2Record(request.request,
-                        getChildrenRequest);
+                ByteBufferInputStream.byteBuffer2Record(request.request, getChildrenRequest);
                 DataNode n = zks.getZKDatabase().getNode(getChildrenRequest.getPath());
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
@@ -329,19 +322,16 @@ public class FinalRequestProcessor implements RequestProcessor {
                     
                 }
                 PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG), 
-                        ZooDefs.Perms.READ,
-                        request.authInfo);
+                        ZooDefs.Perms.READ, request.authInfo);
                 List<String> children = zks.getZKDatabase().getChildren(
-                        getChildrenRequest.getPath(), null, getChildrenRequest
-                                .getWatch() ? cnxn : null);
+                        getChildrenRequest.getPath(), null, getChildrenRequest.getWatch() ? cnxn : null);
                 rsp = new GetChildrenResponse(children);
                 break;
             }
             case OpCode.getChildren2: {
                 lastOp = "GETC";
                 GetChildren2Request getChildren2Request = new GetChildren2Request();
-                ByteBufferInputStream.byteBuffer2Record(request.request,
-                        getChildren2Request);
+                ByteBufferInputStream.byteBuffer2Record(request.request, getChildren2Request);
                 Stat stat = new Stat();
                 DataNode n = zks.getZKDatabase().getNode(getChildren2Request.getPath());
                 if (n == null) {
@@ -352,11 +342,9 @@ public class FinalRequestProcessor implements RequestProcessor {
                     aclG = n.acl;
                 }
                 PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().convertLong(aclG), 
-                        ZooDefs.Perms.READ,
-                        request.authInfo);
+                        ZooDefs.Perms.READ, request.authInfo);
                 List<String> children = zks.getZKDatabase().getChildren(
-                        getChildren2Request.getPath(), stat, getChildren2Request
-                                .getWatch() ? cnxn : null);
+                        getChildren2Request.getPath(), stat, getChildren2Request.getWatch() ? cnxn : null);
                 rsp = new GetChildren2Response(children, stat);
                 break;
             }
@@ -389,8 +377,7 @@ public class FinalRequestProcessor implements RequestProcessor {
         }
 
         long lastZxid = zks.getZKDatabase().getDataTreeLastProcessedZxid();
-        ReplyHeader hdr =
-            new ReplyHeader(request.cxid, lastZxid, err.intValue());
+        ReplyHeader hdr = new ReplyHeader(request.cxid, lastZxid, err.intValue());
 
         zks.serverStats().updateLatency(request.createTime);
         cnxn.updateStatsForResponse(request.cxid, lastZxid, lastOp,

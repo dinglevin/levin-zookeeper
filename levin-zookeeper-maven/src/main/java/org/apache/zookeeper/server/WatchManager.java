@@ -143,8 +143,7 @@ public class WatchManager {
 
     /**
      * String representation of watches. Warning, may be large!
-     * @param byPath iff true output watches by paths, otw output
-     * watches by connection
+     * @param byPath if true output watches by paths, otw output watches by connection
      * @return string representation of watches
      */
     public synchronized void dumpWatches(PrintWriter pwriter, boolean byPath) {

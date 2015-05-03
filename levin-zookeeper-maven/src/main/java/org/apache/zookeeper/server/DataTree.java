@@ -73,6 +73,21 @@ import org.slf4j.LoggerFactory;
  */
 public class DataTree {
     private static final Logger LOG = LoggerFactory.getLogger(DataTree.class);
+    
+    /** the root of zookeeper tree */
+    private static final String rootZookeeper = "/";
+
+    /** the zookeeper nodes that acts as the management and status node **/
+    private static final String procZookeeper = Quotas.procZookeeper;
+
+    /** this will be the string thats stored as a child of root */
+    private static final String procChildZookeeper = procZookeeper.substring(1);
+
+    /** the zookeeper quota node that acts as the quota management node for zookeeper */
+    private static final String quotaZookeeper = Quotas.quotaZookeeper;
+
+    /** this will be the string thats stored as a child of /zookeeper */
+    private static final String quotaChildZookeeper = quotaZookeeper.substring(procZookeeper.length() + 1);
 
     /**
      * This hashtable provides a fast lookup to the datanodes. The tree is the
@@ -84,25 +99,6 @@ public class DataTree {
     private final WatchManager dataWatches = new WatchManager();
 
     private final WatchManager childWatches = new WatchManager();
-
-    /** the root of zookeeper tree */
-    private static final String rootZookeeper = "/";
-
-    /** the zookeeper nodes that acts as the management and status node **/
-    private static final String procZookeeper = Quotas.procZookeeper;
-
-    /** this will be the string thats stored as a child of root */
-    private static final String procChildZookeeper = procZookeeper.substring(1);
-
-    /**
-     * the zookeeper quota node that acts as the quota management node for
-     * zookeeper
-     */
-    private static final String quotaZookeeper = Quotas.quotaZookeeper;
-
-    /** this will be the string thats stored as a child of /zookeeper */
-    private static final String quotaChildZookeeper = quotaZookeeper
-            .substring(procZookeeper.length() + 1);
 
     /**
      * the path trie that keeps track fo the quota nodes in this datatree
@@ -155,31 +151,6 @@ public class DataTree {
     }
 
     /**
-     * compare two list of acls. if there elements are in the same order and the
-     * same size then return true else return false
-     *
-     * @param lista
-     *            the list to be compared
-     * @param listb
-     *            the list to be compared
-     * @return true if and only if the lists are of the same size and the
-     *         elements are in the same order in lista and listb
-     */
-    private boolean listACLEquals(List<ACL> lista, List<ACL> listb) {
-        if (lista.size() != listb.size()) {
-            return false;
-        }
-        for (int i = 0; i < lista.size(); i++) {
-            ACL a = lista.get(i);
-            ACL b = listb.get(i);
-            if (!a.equals(b)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * converts the list of acls to a list of longs.
      *
      * @param acls
@@ -224,8 +195,7 @@ public class DataTree {
     }
 
     /**
-     * just an accessor method to allow raw creation of datatree's from a bunch
-     * of datanodes
+     * just an accessor method to allow raw creation of datatree's from a bunch of datanodes
      *
      * @param path
      *            the path of the datanode
@@ -289,8 +259,7 @@ public class DataTree {
             new StatPersisted());
 
     /**
-     * create a /zookeeper/quota node for maintaining quota properties for
-     * zookeeper
+     * create a /zookeeper/quota node for maintaining quota properties for zookeeper
      */
     private DataNode quotaDataNode = new DataNode(procDataNode, new byte[0],
             -1L, new StatPersisted());
@@ -384,10 +353,8 @@ public class DataTree {
             thisStats = new StatsTrack(new String(node.data));
         }
         if (thisStats.getCount() > -1 && (thisStats.getCount() < updatedStat.getCount())) {
-            LOG
-            .warn("Quota exceeded: " + lastPrefix + " count="
-                    + updatedStat.getCount() + " limit="
-                    + thisStats.getCount());
+            LOG.warn("Quota exceeded: " + lastPrefix + " count="
+                    + updatedStat.getCount() + " limit=" + thisStats.getCount());
         }
     }
 
@@ -430,10 +397,8 @@ public class DataTree {
             thisStats = new StatsTrack(new String(node.data));
         }
         if (thisStats.getBytes() > -1 && (thisStats.getBytes() < updatedStat.getBytes())) {
-            LOG
-            .warn("Quota exceeded: " + lastPrefix + " bytes="
-                    + updatedStat.getBytes() + " limit="
-                    + thisStats.getBytes());
+            LOG.warn("Quota exceeded: " + lastPrefix + " bytes="
+                    + updatedStat.getBytes() + " limit=" + thisStats.getBytes());
         }
     }
 
@@ -502,13 +467,11 @@ public class DataTree {
         if (parentName.startsWith(quotaZookeeper)) {
             // now check if its the limit node
             if (Quotas.limitNode.equals(childName)) {
-                // this is the limit node
-                // get the parent and add it to the trie
+                // this is the limit node get the parent and add it to the trie
                 pTrie.addPath(parentName.substring(quotaZookeeper.length()));
             }
             if (Quotas.statNode.equals(childName)) {
-                updateQuotaForPath(parentName
-                        .substring(quotaZookeeper.length()));
+                updateQuotaForPath(parentName.substring(quotaZookeeper.length()));
             }
         }
         // also check to update the quotas for this node
@@ -564,8 +527,7 @@ public class DataTree {
         if (parentName.startsWith(procZookeeper)) {
             // delete the node in the trie.
             if (Quotas.limitNode.equals(childName)) {
-                // we need to update the trie
-                // as well
+                // we need to update the trie as well
                 pTrie.deletePath(parentName.substring(quotaZookeeper.length()));
             }
         }
@@ -587,8 +549,7 @@ public class DataTree {
             ZooTrace.logTraceMessage(LOG, ZooTrace.EVENT_DELIVERY_TRACE_MASK,
                     "childWatches.triggerWatch " + parentName);
         }
-        Set<Watcher> processed = dataWatches.triggerWatch(path,
-                EventType.NodeDeleted);
+        Set<Watcher> processed = dataWatches.triggerWatch(path, EventType.NodeDeleted);
         childWatches.triggerWatch(path, EventType.NodeDeleted, processed);
         childWatches.triggerWatch(parentName.equals("") ? "/" : parentName,
                 EventType.NodeChildrenChanged);
@@ -634,8 +595,7 @@ public class DataTree {
 
         if (!rootZookeeper.equals(lastPrefix) && !("".equals(lastPrefix))) {
             return lastPrefix;
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -712,7 +672,6 @@ public class DataTree {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public List<ACL> getACL(String path, Stat stat)
             throws KeeperException.NoNodeException {
         DataNode n = nodes.get(path);
@@ -767,13 +726,11 @@ public class DataTree {
         public int hashCode() {
             return (int) ((clientId ^ cxid) % Integer.MAX_VALUE);
         }
-
     }
 
     public volatile long lastProcessedZxid = 0;
 
-    public ProcessTxnResult processTxn(TxnHeader header, Record txn)
-    {
+    public ProcessTxnResult processTxn(TxnHeader header, Record txn) {
         ProcessTxnResult rc = new ProcessTxnResult();
 
         try {
@@ -964,15 +921,12 @@ public class DataTree {
                 try {
                     deleteNode(path, zxid);
                     if (LOG.isDebugEnabled()) {
-                        LOG
-                                .debug("Deleting ephemeral node " + path
-                                        + " for session 0x"
-                                        + Long.toHexString(session));
+                        LOG.debug("Deleting ephemeral node " + path 
+                                + " for session 0x" + Long.toHexString(session));
                     }
                 } catch (NoNodeException e) {
                     LOG.warn("Ignoring NoNodeException for path " + path
-                            + " while removing ephemeral for dead session 0x"
-                            + Long.toHexString(session));
+                            + " while removing ephemeral for dead session 0x" + Long.toHexString(session));
                 }
             }
         }
@@ -1058,16 +1012,11 @@ public class DataTree {
             }
         }
         if (children == null || children.length == 0) {
-            // this node does not have a child
-            // is the leaf node
-            // check if its the leaf node
+            // this node does not have a child is the leaf node check if its the leaf node
             String endString = "/" + Quotas.limitNode;
             if (path.endsWith(endString)) {
-                // ok this is the limit node
-                // get the real node and update
-                // the count and the bytes
-                String realPath = path.substring(Quotas.quotaZookeeper
-                        .length(), path.indexOf(endString));
+                // ok this is the limit node get the real node and update the count and the bytes
+                String realPath = path.substring(Quotas.quotaZookeeper.length(), path.indexOf(endString));
                 updateQuotaForPath(realPath);
                 this.pTrie.addPath(realPath);
             }
@@ -1121,8 +1070,7 @@ public class DataTree {
         int off = path.length();
         if (children != null) {
             for (String child : children) {
-                // since this is single buffer being resused
-                // we need
+                // since this is single buffer being reused we need
                 // to truncate the previous bytes of string.
                 path.delete(off, Integer.MAX_VALUE);
                 path.append(child);
@@ -1216,10 +1164,8 @@ public class DataTree {
             path = ia.readString("path");
         }
         nodes.put("/", root);
-        // we are done with deserializing the
-        // the datatree
-        // update the quotas - create path trie
-        // and also update the stat nodes
+        // we are done with deserializing the the datatree
+        // update the quotas - create path trie and also update the stat nodes
         setupQuota();
     }
 

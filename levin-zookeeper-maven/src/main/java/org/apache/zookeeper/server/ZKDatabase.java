@@ -57,7 +57,6 @@ import org.apache.zookeeper.txn.TxnHeader;
  * and snapshots from the disk.
  */
 public class ZKDatabase {
-    
     private static final Logger LOG = LoggerFactory.getLogger(ZKDatabase.class);
     
     /**
@@ -104,9 +103,7 @@ public class ZKDatabase {
     public void clear() {
         minCommittedLog = 0;
         maxCommittedLog = 0;
-        /* to be safe we just create a new 
-         * datatree.
-         */
+        /* to be safe we just create a new datatree.*/
         dataTree = new DataTree();
         sessionsWithTimeouts.clear();
         WriteLock lock = logLock.writeLock();
@@ -135,16 +132,15 @@ public class ZKDatabase {
         return maxCommittedLog;
     }
     
-    
     /**
-     * the minimum committed transaction log
-     * available in memory
+     * the minimum committed transaction log available in memory
      * @return the minimum committed transaction
      * log available in memory
      */
     public long getminCommittedLog() {
         return minCommittedLog;
     }
+    
     /**
      * Get the lock that controls the committedLog. If you want to get the pointer to the committedLog, you need
      * to use this lock to acquire a read lock before calling getCommittedLog()
@@ -153,7 +149,6 @@ public class ZKDatabase {
     public ReentrantReadWriteLock getLogLock() {
         return logLock;
     }
-    
 
     public synchronized LinkedList<Proposal> getCommittedLog() {
         ReadLock rl = logLock.readLock();
@@ -167,7 +162,7 @@ public class ZKDatabase {
             }
         } 
         return this.committedLog;
-    }      
+    }
     
     /**
      * get the last processed zxid from a datatree
@@ -201,7 +196,6 @@ public class ZKDatabase {
         return sessionsWithTimeouts;
     }
 
-    
     /**
      * load the database from the disk onto memory and also add 
      * the transactions to the committedlog in memory.
@@ -209,10 +203,9 @@ public class ZKDatabase {
      * @throws IOException
      */
     public long loadDataBase() throws IOException {
-        PlayBackListener listener=new PlayBackListener(){
+        PlayBackListener listener = new PlayBackListener() {
             public void onTxnLoaded(TxnHeader hdr,Record txn){
-                Request r = new Request(null, 0, hdr.getCxid(),hdr.getType(),
-                        null, null);
+                Request r = new Request(null, 0, hdr.getCxid(),hdr.getType(), null, null);
                 r.txn = txn;
                 r.hdr = hdr;
                 r.zxid = hdr.getZxid();
@@ -220,15 +213,14 @@ public class ZKDatabase {
             }
         };
         
-        long zxid = snapLog.restore(dataTree,sessionsWithTimeouts,listener);
+        long zxid = snapLog.restore(dataTree, sessionsWithTimeouts, listener);
         initialized = true;
         return zxid;
     }
     
     /**
-     * maintains a list of last <i>committedLog</i>
-     *  or so committed requests. This is used for
-     * fast follower synchronization.
+     * maintains a list of last <i>committedLog</i> 
+     * or so committed requests. This is used for fast follower synchronization.
      * @param request committed request
      */
     public void addCommittedProposal(Request request) {
@@ -267,7 +259,6 @@ public class ZKDatabase {
         }
     }
 
-    
     /**
      * remove a cnxn from the datatree
      * @param cnxn the cnxn to remove from the datatree
@@ -302,7 +293,7 @@ public class ZKDatabase {
     }
 
     /**
-     * the paths for  ephemeral session id 
+     * the paths for ephemeral session id
      * @param sessionId the session id for which paths match to 
      * @return the paths for a session id
      */
@@ -454,7 +445,7 @@ public class ZKDatabase {
         clear();
         SerializeUtils.deserializeSnapshot(getDataTree(),ia,getSessionWithTimeOuts());
         initialized = true;
-    }   
+    }
     
     /**
      * serialize the snapshot

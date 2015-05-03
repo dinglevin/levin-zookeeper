@@ -75,8 +75,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
     private final Request requestOfDeath = Request.requestOfDeath;
 
     public SyncRequestProcessor(ZooKeeperServer zks,
-            RequestProcessor nextProcessor)
-    {
+            RequestProcessor nextProcessor) {
         super("SyncThread:" + zks.getServerId());
         this.zks = zks;
         this.nextProcessor = nextProcessor;
@@ -162,7 +161,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
                         }
                     } else if (toFlush.isEmpty()) {
                         // optimization for read heavy workloads
-                        // iff this is a read, and there are no pending
+                        // if this is a read, and there are no pending
                         // flushes (writes), then just pass this to the next
                         // processor
                         if (nextProcessor != null) {
@@ -188,8 +187,7 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
     }
 
     private void flush(LinkedList<Request> toFlush)
-        throws IOException, RequestProcessorException
-    {
+        throws IOException, RequestProcessorException {
         if (toFlush.isEmpty())
             return;
 

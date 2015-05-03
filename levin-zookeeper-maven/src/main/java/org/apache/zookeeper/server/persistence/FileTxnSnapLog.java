@@ -39,31 +39,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is a helper class 
- * above the implementations 
- * of txnlog and snapshot 
- * classes
+ * This is a helper class above the implementations 
+ * of txnlog and snapshot classes
  */
 public class FileTxnSnapLog {
-    //the direcotry containing the 
-    //the transaction logs
-    private final File dataDir;
-    //the directory containing the
-    //the snapshot directory
-    private final File snapDir;
-    private TxnLog txnLog;
-    private SnapShot snapLog;
+    private static final Logger LOG = LoggerFactory.getLogger(FileTxnSnapLog.class);
+    
     public final static int VERSION = 2;
     public final static String version = "version-";
     
-    private static final Logger LOG = LoggerFactory.getLogger(FileTxnSnapLog.class);
+    //the direcotry containing the the transaction logs
+    private final File dataDir;
+    //the directory containing the the snapshot directory
+    private final File snapDir;
+    private TxnLog txnLog;
+    private SnapShot snapLog;
     
     /**
-     * This listener helps
-     * the external apis calling
-     * restore to gather information
-     * while the data is being 
-     * restored.
+     * This listener helps the external apis calling
+     * restore to gather information while the data is being restored.
      */
     public interface PlayBackListener {
         void onTxnLoaded(TxnHeader hdr, Record rec);
@@ -97,8 +91,7 @@ public class FileTxnSnapLog {
     }
     
     /**
-     * get the datadir used by this filetxn
-     * snap log
+     * get the datadir used by this filetxn snap log
      * @return the data dir
      */
     public File getDataDir() {
@@ -106,8 +99,7 @@ public class FileTxnSnapLog {
     }
     
     /**
-     * get the snap dir used by this 
-     * filetxn snap log
+     * get the snap dir used by this filetxn snap log
      * @return the snap dir
      */
     public File getSnapDir() {
@@ -115,13 +107,11 @@ public class FileTxnSnapLog {
     }
     
     /**
-     * this function restores the server 
-     * database after reading from the 
+     * this function restores the server database after reading from the 
      * snapshots and transaction logs
      * @param dt the datatree to be restored
      * @param sessions the sessions to be restored
-     * @param listener the playback listener to run on the 
-     * database restoration
+     * @param listener the playback listener to run on the database restoration
      * @return the highest zxid restored
      * @throws IOException
      */
@@ -129,7 +119,7 @@ public class FileTxnSnapLog {
             PlayBackListener listener) throws IOException {
         snapLog.deserialize(dt, sessions);
         FileTxnLog txnLog = new FileTxnLog(dataDir);
-        TxnIterator itr = txnLog.read(dt.lastProcessedZxid+1);
+        TxnIterator itr = txnLog.read(dt.lastProcessedZxid + 1);
         long highestZxid = dt.lastProcessedZxid;
         TxnHeader hdr;
         try {
@@ -143,8 +133,7 @@ public class FileTxnSnapLog {
                 }
                 if (hdr.getZxid() < highestZxid && highestZxid != 0) {
                     LOG.error("{}(higestZxid) > {}(next log) for type {}",
-                            new Object[] { highestZxid, hdr.getZxid(),
-                                    hdr.getType() });
+                            new Object[] { highestZxid, hdr.getZxid(), hdr.getType() });
                 } else {
                     highestZxid = hdr.getZxid();
                 }
@@ -237,15 +226,12 @@ public class FileTxnSnapLog {
         throws IOException {
         long lastZxid = dataTree.lastProcessedZxid;
         File snapshotFile = new File(snapDir, Util.makeSnapshotName(lastZxid));
-        LOG.info("Snapshotting: 0x{} to {}", Long.toHexString(lastZxid),
-                snapshotFile);
+        LOG.info("Snapshotting: 0x{} to {}", Long.toHexString(lastZxid), snapshotFile);
         snapLog.serialize(dataTree, sessionsWithTimeouts, snapshotFile);
-        
     }
 
     /**
-     * truncate the transaction logs the zxid
-     * specified
+     * truncate the transaction logs the zxid specified
      * @param zxid the zxid to truncate the logs to
      * @return true if able to truncate the log, false if not
      * @throws IOException

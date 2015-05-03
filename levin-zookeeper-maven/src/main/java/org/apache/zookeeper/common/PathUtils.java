@@ -48,15 +48,13 @@ public class PathUtils {
             throw new IllegalArgumentException("Path length must be > 0");
         }
         if (path.charAt(0) != '/') {
-            throw new IllegalArgumentException(
-                         "Path must start with / character");
+            throw new IllegalArgumentException("Path must start with / character");
         }
         if (path.length() == 1) { // done checking - it's the root
             return;
         }
         if (path.charAt(path.length() - 1) == '/') {
-            throw new IllegalArgumentException(
-                         "Path must not end with / character");
+            throw new IllegalArgumentException("Path must not end with / character");
         }
 
         String reason = null;

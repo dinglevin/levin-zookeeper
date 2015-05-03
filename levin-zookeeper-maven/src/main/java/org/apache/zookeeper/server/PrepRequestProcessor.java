@@ -113,6 +113,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
     public static void setFailCreate(boolean b) {
         failCreate = b;
     }
+    
     @Override
     public void run() {
         try {
@@ -317,17 +318,14 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
      * @param request
      * @param record
      */
-    @SuppressWarnings("unchecked")
     protected void pRequest2Txn(int type, long zxid, Request request, Record record, boolean deserialize)
-        throws KeeperException, IOException, RequestProcessorException
-    {
-        request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid,
-                                    zks.getTime(), type);
-
+        throws KeeperException, IOException, RequestProcessorException {
+        request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid, zks.getTime(), type);
+        
         switch (type) {
-            case OpCode.create:                
+            case OpCode.create:
                 zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
-                CreateRequest createRequest = (CreateRequest)record;   
+                CreateRequest createRequest = (CreateRequest)record;
                 if(deserialize)
                     ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);
                 String path = createRequest.getPath();
@@ -344,11 +342,9 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 String parentPath = path.substring(0, lastSlash);
                 ChangeRecord parentRecord = getRecordForPath(parentPath);
 
-                checkACL(zks, parentRecord.acl, ZooDefs.Perms.CREATE,
-                        request.authInfo);
+                checkACL(zks, parentRecord.acl, ZooDefs.Perms.CREATE, request.authInfo);
                 int parentCVersion = parentRecord.stat.getCversion();
-                CreateMode createMode =
-                    CreateMode.fromFlag(createRequest.getFlags());
+                CreateMode createMode = CreateMode.fromFlag(createRequest.getFlags());
                 if (createMode.isSequential()) {
                     path = path + String.format(Locale.ENGLISH, "%010d", parentCVersion);
                 }
@@ -372,8 +368,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 }
                 int newCversion = parentRecord.stat.getCversion()+1;
                 request.txn = new CreateTxn(path, createRequest.getData(),
-                        listACL,
-                        createMode.isEphemeral(), newCversion);
+                        listACL, createMode.isEphemeral(), newCversion);
                 StatPersisted s = new StatPersisted();
                 if (createMode.isEphemeral()) {
                     s.setEphemeralOwner(request.sessionId);
@@ -382,8 +377,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 parentRecord.childCount++;
                 parentRecord.stat.setCversion(newCversion);
                 addChangeRecord(parentRecord);
-                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, s,
-                        0, listACL));
+                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, s, 0, listACL));
                 break;
             case OpCode.delete:
                 zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
@@ -399,8 +393,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 parentPath = path.substring(0, lastSlash);
                 parentRecord = getRecordForPath(parentPath);
                 ChangeRecord nodeRecord = getRecordForPath(path);
-                checkACL(zks, parentRecord.acl, ZooDefs.Perms.DELETE,
-                        request.authInfo);
+                checkACL(zks, parentRecord.acl, ZooDefs.Perms.DELETE, request.authInfo);
                 int version = deleteRequest.getVersion();
                 if (version != -1 && nodeRecord.stat.getVersion() != version) {
                     throw new KeeperException.BadVersionException(path);
@@ -412,8 +405,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 parentRecord = parentRecord.duplicate(request.hdr.getZxid());
                 parentRecord.childCount--;
                 addChangeRecord(parentRecord);
-                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path,
-                        null, -1, null));
+                addChangeRecord(new ChangeRecord(request.hdr.getZxid(), path, null, -1, null));
                 break;
             case OpCode.setData:
                 zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
@@ -422,8 +414,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     ByteBufferInputStream.byteBuffer2Record(request.request, setDataRequest);
                 path = setDataRequest.getPath();
                 nodeRecord = getRecordForPath(path);
-                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.WRITE,
-                        request.authInfo);
+                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.WRITE, request.authInfo);
                 version = setDataRequest.getVersion();
                 int currentVersion = nodeRecord.stat.getVersion();
                 if (version != -1 && version != currentVersion) {
@@ -446,8 +437,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     throw new KeeperException.InvalidACLException(path);
                 }
                 nodeRecord = getRecordForPath(path);
-                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.ADMIN,
-                        request.authInfo);
+                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.ADMIN, request.authInfo);
                 version = setAclRequest.getVersion();
                 currentVersion = nodeRecord.stat.getAversion();
                 if (version != -1 && version != currentVersion) {
@@ -472,8 +462,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 // queues up this operation without being the session owner.
                 // this request is the last of the session so it should be ok
                 //zks.sessionTracker.checkSession(request.sessionId, request.getOwner());
-                HashSet<String> es = zks.getZKDatabase()
-                        .getEphemerals(request.sessionId);
+                HashSet<String> es = zks.getZKDatabase().getEphemerals(request.sessionId);
                 synchronized (zks.outstandingChanges) {
                     for (ChangeRecord c : zks.outstandingChanges) {
                         if (c.stat == null) {
@@ -501,8 +490,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     ByteBufferInputStream.byteBuffer2Record(request.request, checkVersionRequest);
                 path = checkVersionRequest.getPath();
                 nodeRecord = getRecordForPath(path);
-                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.READ,
-                        request.authInfo);
+                checkACL(zks, nodeRecord.acl, ZooDefs.Perms.READ, request.authInfo);
                 version = checkVersionRequest.getVersion();
                 currentVersion = nodeRecord.stat.getVersion();
                 if (version != -1 && version != currentVersion) {
@@ -520,7 +508,6 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
      *
      * @param request
      */
-    @SuppressWarnings("unchecked")
     protected void pRequest(Request request) throws RequestProcessorException {
         // LOG.info("Prep>>> cxid = " + request.cxid + " type = " +
         // request.type + " id = 0x" + Long.toHexString(request.sessionId));
@@ -534,15 +521,15 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 pRequest2Txn(request.type, zks.getNextZxid(), request, createRequest, true);
                 break;
             case OpCode.delete:
-                DeleteRequest deleteRequest = new DeleteRequest();               
+                DeleteRequest deleteRequest = new DeleteRequest();
                 pRequest2Txn(request.type, zks.getNextZxid(), request, deleteRequest, true);
                 break;
             case OpCode.setData:
-                SetDataRequest setDataRequest = new SetDataRequest();                
+                SetDataRequest setDataRequest = new SetDataRequest();
                 pRequest2Txn(request.type, zks.getNextZxid(), request, setDataRequest, true);
                 break;
             case OpCode.setACL:
-                SetACLRequest setAclRequest = new SetACLRequest();                
+                SetACLRequest setAclRequest = new SetACLRequest();
                 pRequest2Txn(request.type, zks.getNextZxid(), request, setAclRequest, true);
                 break;
             case OpCode.check:
@@ -566,7 +553,6 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                 //Store off current pending change records in case we need to rollback
                 HashMap<String, ChangeRecord> pendingChanges = getPendingChanges(multiRequest);
 
-                int index = 0;
                 for(Op op: multiRequest) {
                     Record subrequest = op.toRequestRecord() ;
 
@@ -577,10 +563,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     if (ke != null) {
                         request.hdr.setType(OpCode.error);
                         request.txn = new ErrorTxn(Code.RUNTIMEINCONSISTENCY.intValue());
-                    } 
-                    
-                    /* Prep the request and convert to a Txn */
-                    else {
+                    } else { /* Prep the request and convert to a Txn */
                         try {
                             pRequest2Txn(op.getType(), zxid, request, subrequest, false);
                         } catch (KeeperException e) {
@@ -610,7 +593,6 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     ByteBuffer bb = ByteBuffer.wrap(baos.toByteArray());
 
                     txns.add(new Txn(request.hdr.getType(), bb.array()));
-                    index++;
                 }
 
                 request.hdr = new TxnHeader(request.sessionId, request.cxid, zxid, zks.getTime(), request.type);
@@ -674,7 +656,6 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
     }
 
     private List<ACL> removeDuplicates(List<ACL> acl) {
-
         ArrayList<ACL> retval = new ArrayList<ACL>();
         Iterator<ACL> it = acl.iterator();
         while (it.hasNext()) {
@@ -685,7 +666,6 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
         }
         return retval;
     }
-
 
     /**
      * This method checks out the acl making sure it isn't null or empty,
@@ -734,8 +714,7 @@ public class PrepRequestProcessor extends Thread implements RequestProcessor {
                     return false;
                 }
             } else {
-                AuthenticationProvider ap = ProviderRegistry.getProvider(id
-                        .getScheme());
+                AuthenticationProvider ap = ProviderRegistry.getProvider(id.getScheme());
                 if (ap == null) {
                     return false;
                 }
